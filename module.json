@@ -1,0 +1,51 @@
+{
+  "id": "sidebar-traits",
+  "title": "D&D 5e Action Sheet",
+  "description": "See your Actions in the Details panel.",
+  "version": "0.1.1",
+  "authors": [
+    {
+      "name": "Erozbey",
+      "discord": "erozbey"
+    },
+    {
+      "name": "Maceracilar Loncasi",
+      "url": "https://github.com/MaceracilarLoncasi"
+    }
+  ],
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13"
+  },
+  "esmodules": [
+    "sidebar-traits.js"
+  ],
+  "styles": [
+    "styles/sidebar-traits.css"
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system"
+      }
+    ]
+  },
+  "url": "",
+  "manifest": "",
+  "download": "",
+  "readme": "",
+  "license": "",
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "tr",
+      "name": "Türkçe",
+      "path": "lang/tr.json"
+    }
+  ]
+}

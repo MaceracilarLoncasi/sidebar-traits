@@ -1,0 +1,255 @@
+/* Action Economy: expandable rows */
+.action-economy {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.action-economy .ae-section h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 800;
+  border-bottom: 1px solid var(--dnd5e-border);
+  padding-bottom: 4px;
+}
+
+.action-economy table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.action-economy thead th {
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 800;
+  border-bottom: 1px solid var(--dnd5e-border);
+}
+
+.action-economy tbody td {
+  padding: 6px 8px;
+  font-size: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--dnd5e-border) 70%, transparent);
+  vertical-align: middle;
+}
+
+.action-economy tr.ae-row { cursor: pointer; }
+.action-economy tr.ae-row:hover { background: color-mix(in srgb, var(--dnd5e-color-black) 5%, transparent); }
+
+/* Default CLOSED */
+.action-economy tr.ae-summary-row { display: none; }
+.action-economy tr.ae-summary-row.open { display: table-row; }
+
+.action-economy .ae-summary { padding: 10px 8px; }
+.action-economy .ae-activities-title { font-weight: 800; margin: 6px 0; }
+
+.action-economy .ae-activities { margin: 8px 0 0; display: flex; flex-direction: column; gap: 6px; }
+.action-economy .ae-activity { display: flex; align-items: center; gap: 8px; }
+.action-economy .ae-activity .label { font-weight: 700; flex: 1; }
+
+.action-economy .ae-btn {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--dnd5e-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.action-economy .ae-btn:hover {
+  background: color-mix(in srgb, var(--dnd5e-color-black) 6%, transparent);
+}
+
+.action-economy .ae-name { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.action-economy .ae-name .img {
+  width: 22px; height: 22px; border-radius: 4px;
+  background-size: cover; background-position: center; flex: 0 0 22px;
+}
+.action-economy .ae-name .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.action-economy .ae-toggle { margin-left: auto; opacity: 0.85; cursor: pointer; }
+
+
+
+/* Column widths (make Name wider so long item names are readable) */
+.action-economy thead th:nth-child(1),
+.action-economy tbody td:nth-child(1) { width: 34%; }
+
+.action-economy .ae-col-uses { width: 10%; }
+.action-economy .ae-col-roll { width: 14%; }
+.action-economy .ae-col-dmg  { width: 16%; }
+.action-economy .ae-col-range{ width: 13%; }
+.action-economy .ae-col-target{ width: 13%; }
+
+/* Column alignment */
+.action-economy th, .action-economy td { text-align: center; }
+.action-economy th:first-child, .action-economy td:first-child { text-align: left; }
+
+/* Damage cell formatting similar to inventory */
+.action-economy .ae-col-dmg .ae-dmgrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.action-economy .ae-col-dmg .formula {
+  font-weight: 700;
+}
+.action-economy .ae-col-dmg .dtype {
+  opacity: 0.9;
+  font-size: 11px;
+  border: 1px solid var(--dnd5e-border);
+  border-radius: 10px;
+  padding: 1px 6px;
+}
+
+
+/* Activities table (reference-like) */
+.action-economy .ae-activities-table {
+  margin-top: 10px;
+  border-top: 1px solid var(--dnd5e-border);
+}
+
+.action-economy .ae-activities-head {
+  display: grid;
+  grid-template-columns: 1fr 90px 70px 160px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--dnd5e-color-maroon, #5a1a1a);
+  color: var(--dnd5e-color-parchment, #f0e7d6);
+  font-weight: 800;
+  font-size: 12px;
+  border-radius: 4px;
+  margin: 8px 0 6px;
+}
+
+.action-economy .ae-activities-head .title { text-align: left; }
+.action-economy .ae-activities-head .col { text-align: center; }
+
+.action-economy .ae-activity-row {
+  display: grid;
+  grid-template-columns: 1fr 90px 70px 160px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--dnd5e-border) 70%, transparent);
+}
+
+.action-economy .ae-activity-row .name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.action-economy .ae-activity-row .name .icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.action-economy .ae-activity-row .label {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.action-economy .ae-activity-row .uses,
+.action-economy .ae-activity-row .time,
+.action-economy .ae-activity-row .dmg {
+  text-align: center;
+  font-size: 12px;
+}
+
+
+
+/* Ensure activity action icons are hidden (requested) */
+.action-economy .ae-activities-table .ae-btn,
+.action-economy .ae-activities-table .ctrls {
+  display: none !important;
+}
+
+
+/* Damage display (formula + dnd5e-icon like inventory) */
+.action-economy .ae-col-dmg .row,
+.action-economy .ae-activity-row .dmg .row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.action-economy .ae-col-dmg .row .formula,
+.action-economy .ae-activity-row .dmg .row .formula {
+  font-weight: 700;
+}
+
+.action-economy dnd5e-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+}
+
+
+/* Match dnd5e inventory icon styling */
+.action-economy dnd5e-icon { font-size: var(--font-size-14); --icon-fill: var(--color-text-secondary); }
+
+
+/* Saving Throw badge in Zar/ST column */
+.action-economy .ae-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 2px 8px;
+  border: 1px solid var(--dnd5e-border, var(--color-border-light-1));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-bg) 85%, transparent);
+  white-space: nowrap;
+}
+.action-economy .ae-save i {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.action-economy .row{display:flex;align-items:center;justify-content:center;gap:6px;}
+
+
+/* Action Economy Filter Button */
+.action-economy .ae-header{display:flex;align-items:center;justify-content:space-between;}
+.action-economy .ae-filter-btn{border:1px solid var(--color-border-light-tertiary, #aaa);background:rgba(0,0,0,0.05);border-radius:4px;padding:2px 6px;cursor:pointer;}
+.action-economy .ae-filter-btn i{pointer-events:none;}
+
+.action-economy .ae-filter-grid{display:flex;flex-direction:column;gap:6px;}
+.ae-filter-row{display:flex;align-items:center;gap:8px;}
+
+/* Action / Bonus / Reaction headers (match dnd5e section headers) */
+.action-economy h3{
+  font-family: "Roboto Condensed", "Roboto", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+
+/* Force Action Economy section titles sizing (some sheet styles override generic h3 rules) */
+:root { --ae-section-title-size: 13px; }
+
+.dnd5e2.sheet.actor .action-economy h3.ae-section-title,
+.dnd5e2.sheet.actor .action-economy .ae-header.ae-section-title {
+  font-family: "Roboto Condensed", "Roboto", sans-serif !important;
+  font-weight: 700 !important;
+  font-size: var(--ae-section-title-size) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  line-height: 1.2 !important;
+}
