@@ -31,11 +31,11 @@
       }
     ]
   },
-  "url": "",
-  "manifest": "",
-  "download": "",
-  "readme": "",
-  "license": "",
+  "url": "https://github.com/MaceracilarLoncasi/sidebar-traits",
+  "manifest": "https://github.com/MaceracilarLoncasi/sidebar-traits/releases/download/v0.1.1/module.json",
+  "download": "https://github.com/MaceracilarLoncasi/sidebar-traits/releases/download/v0.1.1/sidebar-traits.zip",
+  "readme": "https://github.com/MaceracilarLoncasi/sidebar-traits/blob/main/README.md",
+  "license": "https://github.com/MaceracilarLoncasi/sidebar-traits/blob/main/LICENSE",
   "languages": [
     {
       "lang": "en",
