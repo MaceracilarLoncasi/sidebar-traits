@@ -46,6 +46,11 @@
       "lang": "tr",
       "name": "Türkçe",
       "path": "lang/tr.json"
+    },
+    {
+      "lang": "ru",
+      "name": "Russian",
+      "path": "lang/ru.json"
     }
   ]
 }
