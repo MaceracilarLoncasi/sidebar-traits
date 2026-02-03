@@ -253,3 +253,8 @@
   text-transform: uppercase !important;
   line-height: 1.2 !important;
 }
+
+
+/* Filter dialog: spells sub-options */
+.filter-dialog .spells-suboptions { margin-left: 22px; margin-top: 6px; display: grid; gap: 6px; }
+.filter-dialog .filter-group-title { font-weight: 700; margin-bottom: 6px; }

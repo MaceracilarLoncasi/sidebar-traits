@@ -21,5 +21,14 @@
   "ACTION_SHEET.Filter.Categories.Consumables": "Consumables",
   "ACTION_SHEET.Filter.Categories.Tools": "Tools",
   "ACTION_SHEET.Filter.Categories.Other": "Other",
-  "ACTION_SHEET.Columns.Time": "Time"
+  "ACTION_SHEET.Columns.Time": "Time",
+  "ACTION_SHEET.Filter.Spells.All": "All Spells",
+  "ACTION_SHEET.Filter.Spells.Prepared": "Prepared Spells",
+  "ACTION_SHEET.Filter.Spells.Ritual": "Ritual Spells",
+  "ACTION_SHEET.FilterTitle": "Filter",
+  "ACTION_SHEET.FilterPrompt": "Select what you want to display.",
+  "ACTION_SHEET.FilterSave": "Save",
+  "ACTION_SHEET.FilterReset": "Reset",
+  "ACTION_SHEET.Close": "Close",
+  "ACTION_SHEET.Filter.Spells.Cantrips": "Only Cantrips"
 }

@@ -2,7 +2,7 @@
   "id": "sidebar-traits",
   "title": "D&D 5e Action Sheet",
   "description": "See your Actions in the Details panel.",
-  "version": "0.1.1",
+  "version": "0.2.2",
   "authors": [
     {
       "name": "Erozbey",
@@ -32,20 +32,25 @@
     ]
   },
   "url": "https://github.com/MaceracilarLoncasi/sidebar-traits",
-  "manifest": "https://github.com/MaceracilarLoncasi/sidebar-traits/releases/download/v0.1.1/module.json",
-  "download": "https://github.com/MaceracilarLoncasi/sidebar-traits/releases/download/v0.1.1/sidebar-traits.zip",
+  "manifest": "https://github.com/MaceracilarLoncasi/sidebar-traits/releases/download/v0.2.2/module.json",
+  "download": "https://github.com/MaceracilarLoncasi/sidebar-traits/releases/download/v0.2.2/sidebar-traits.zip",
   "readme": "https://github.com/MaceracilarLoncasi/sidebar-traits/blob/main/README.md",
   "license": "https://github.com/MaceracilarLoncasi/sidebar-traits/blob/main/LICENSE",
-  "languages": [
-    {
-      "lang": "en",
-      "name": "English",
-      "path": "lang/en.json"
-    },
-    {
-      "lang": "tr",
-      "name": "Türkçe",
-      "path": "lang/tr.json"
-    }
-  ]
+"languages": [
+  {
+    "lang": "en",
+    "name": "English",
+    "path": "lang/en.json"
+  },
+  {
+    "lang": "tr",
+    "name": "Türkçe",
+    "path": "lang/tr.json"
+  },
+  {
+    "lang": "ru",
+    "name": "Русский",
+    "path": "lang/ru.json"
+  }
+]
 }

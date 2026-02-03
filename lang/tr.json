@@ -21,5 +21,14 @@
   "ACTION_SHEET.Filter.Categories.Consumables": "Tüketilebilirler",
   "ACTION_SHEET.Filter.Categories.Tools": "Aletler",
   "ACTION_SHEET.Filter.Categories.Other": "Diğer",
-  "ACTION_SHEET.Columns.Time": "Zaman"
+  "ACTION_SHEET.Columns.Time": "Zaman",
+  "ACTION_SHEET.Filter.Spells.All": "Tüm Büyüler",
+  "ACTION_SHEET.Filter.Spells.Prepared": "Hazırlanmış Büyüler",
+  "ACTION_SHEET.Filter.Spells.Ritual": "Ritüel Büyüleri",
+  "ACTION_SHEET.FilterTitle": "Filtre",
+  "ACTION_SHEET.FilterPrompt": "Görüntülenmesini istediğin şeyleri seç",
+  "ACTION_SHEET.FilterSave": "Kaydet",
+  "ACTION_SHEET.FilterReset": "Sıfırla",
+  "ACTION_SHEET.Close": "Kapat",
+  "ACTION_SHEET.Filter.Spells.Cantrips": "Sadece Temelbüyüler"
 }

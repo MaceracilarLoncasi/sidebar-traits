@@ -1,6 +1,107 @@
 console.log("[sidebar-traits] module loaded");
 
 const MODULE_ID = "sidebar-traits";
+
+function rerenderOpenCharacterSheets() {
+  // Foundry v13 can track open apps in multiple registries depending on Application API (V1/V2).
+  const apps = new Set();
+
+  try {
+    for (const app of Object.values(ui?.windows ?? {})) apps.add(app);
+  } catch (_) {}
+
+  try {
+    const inst = globalThis.foundry?.applications?.instances;
+    if (inst) {
+      // Map-like in v13
+      if (typeof inst.values === "function") {
+        for (const app of inst.values()) apps.add(app);
+      } else {
+        for (const app of Object.values(inst)) apps.add(app);
+      }
+    }
+  } catch (_) {}
+
+  try {
+    for (const app of apps) {
+      if (!app) continue;
+
+      // Only re-render open Actor sheets (character sheets are Actor sheets).
+      const isActorSheet =
+        app.documentName === "Actor" ||
+        app.actor ||
+        (app.options?.documentType === "Actor");
+
+      if (!isActorSheet) continue;
+
+      // In v13, some apps expose "rendered", others expose element length.
+      const rendered =
+        app.rendered === true ||
+        (typeof app.element?.length === "number" && app.element.length > 0);
+
+      if (!rendered) continue;
+
+      if (typeof app.render === "function") app.render(true);
+    }
+  } catch (e) {
+    console.error("[sidebar-traits] rerenderOpenCharacterSheets failed", e);
+  }
+}
+
+
+
+function shouldIncludeSpell(spell, spellsFilter) {
+  // spellsFilter: { all, prepared, ritual }
+  if (!spell) return false;
+  const sys = spell.system ?? {};
+
+  // In dnd5e 5.1+ "preparation" is deprecated in favor of "method" + "prepared".
+  // Avoid touching sys.preparation unless we must (older system data).
+  let method;
+  if (Object.prototype.hasOwnProperty.call(sys, "method")) method = sys.method;
+  else if (Object.prototype.hasOwnProperty.call(sys, "preparation")) method = sys.preparation?.mode;
+
+  let prepared;
+  if (Object.prototype.hasOwnProperty.call(sys, "prepared")) prepared = !!sys.prepared;
+  else if (Object.prototype.hasOwnProperty.call(sys, "preparation")) prepared = !!sys.preparation?.prepared;
+
+  const isRitual = !!(sys.ritual ?? sys.properties?.ritual);
+
+  // If "all" is enabled, accept any spell
+  if (spellsFilter?.all) return true;
+
+  // Otherwise match specific sub-filters
+  const wantPrepared = !!spellsFilter?.prepared;
+  const wantRitual = !!spellsFilter?.ritual;
+  const wantCantrips = !!spellsFilter?.cantrips;
+
+  const level = Number(sys.level?.value ?? sys.level ?? sys.levels ?? 0);
+  const isCantrip = level === 0;
+
+  let ok = false;
+
+  if (wantPrepared) {
+    // prepared spells + always/atwill/innate-style methods
+    // method values vary by dnd5e version; we include common ones.
+    ok = ok || prepared || ["always", "atwill", "innate", "pact"].includes(String(method ?? "").toLowerCase());
+  }
+
+  if (wantRitual) {
+    ok = ok || isRitual;
+  }
+
+    if (wantCantrips) {
+    ok = ok || isCantrip;
+  }
+
+  return ok;
+}
+
+function isSpellLikeActivity(activity) {
+  const t = activity?.type ?? activity?.kind ?? activity?.activityType;
+  return t === "spell" || t === "cast" || t === "spellcast";
+}
+
 const DASH = "—";
 
 function aeCategoryForItem(item) {
@@ -327,6 +428,15 @@ function getActivationBucket(item) {
   return null;
 }
 
+function getActivationBucketFromActivity(activity) {
+  const t = activity?.activation?.type ?? activity?.system?.activation?.type ?? null;
+  if (!t) return null;
+  if (t === "bonus") return "bonus";
+  if (t === "reaction") return "reaction";
+  if (t === "action") return "action";
+  return null;
+}
+
 function patchCharacterSheet() {
   const sheetCls = globalThis.dnd5e?.applications?.actor?.CharacterActorSheet;
   if (!sheetCls) {
@@ -360,6 +470,51 @@ function patchCharacterSheet() {
       const buckets = {
         action: [], bonus: [], reaction: [],
         actionCount: 0, bonusCount: 0, reactionCount: 0
+      
+      };
+
+      // De-duplicate rows (mainly spells) by shared sourceId/identifier.
+      const __aeSeen = { action: new Set(), bonus: new Set(), reaction: new Set() };
+
+      /**
+       * Build damage HTML for either an Item or an Activity.
+       *
+       * Prefer label damages when available because dnd5e already formats + localizes them.
+       * Fall back to system damage parts otherwise.
+       */
+      const buildDamageHtml = (source, labelsOverride = null) => {
+        const labels = labelsOverride ?? source?.labels ?? null;
+        const labelDamages = Array.isArray(labels?.damages) ? labels.damages : null;
+
+        // Label-based damages (already localized by system)
+        if (labelDamages && labelDamages.length) {
+          const rows = labelDamages
+            .map((d) => {
+              // Try to extract the last token as a damage/healing type key.
+              // Example: "1d8 healing" or "2d6 fire".
+              const t = String(d).trim().split(/\s+/).pop();
+              const iconKey = mapDamageOrHealingTypeToIconKey(t);
+              return renderDamageRow({ formula: d, iconKey, tooltip: localizeDamageOrHealingType(t) });
+            })
+            .join("");
+          return rows || "—";
+        }
+
+        // Raw parts (formula, type)
+        const parts = source?.damage?.parts ?? source?.system?.damage?.parts;
+        if (!Array.isArray(parts) || !parts.length) return "—";
+
+        const rows = parts
+          .map((p) => {
+            const formula = Array.isArray(p) ? p[0] : p?.formula;
+            const type = Array.isArray(p) ? p[1] : p?.type;
+            if (!formula) return "";
+            const iconKey = mapDamageOrHealingTypeToIconKey(type);
+            return renderDamageRow({ formula, iconKey, tooltip: localizeDamageOrHealingType(type) });
+          })
+          .join("");
+
+        return rows || "—";
       };
 
       const makeRow = async (item) => {
@@ -511,16 +666,16 @@ const buildPartsHtml = (parts, fallbackText="") => {
 }).join("");
         };
 
-const activityTimeShort = (act) => {
+function activityTimeShort(act) {
   const t = act?.activation?.type;
   if (t === "action") return "A";
   if (t === "bonus") return "B";
   if (t === "reaction") return "R";
   if (!t) return "—";
   return String(t).charAt(0).toUpperCase();
-};
+}
 
-const activityUsesText = (act) => {
+function activityUsesText(act) {
   const u = act?.uses;
   if (!u) return "—";
   const max = u.max ?? u.total ?? u.capacity;
@@ -530,7 +685,7 @@ const activityUsesText = (act) => {
   if (max === undefined || max === null || max === "") return `${val ?? 0}`;
   if ((max ?? 0) === 0 && (val ?? 0) === 0) return "—";
   return `${val ?? 0}/${max ?? 0}`;
-};
+}
 
 const activityDamageHtml = (act) => {
 const damages = act?.labels?.damages ?? act?.label?.damages ?? null;
@@ -591,10 +746,88 @@ for (const item of this.actor.items) {
   if (!bucket) continue;
 
   const cat = aeCategoryForItem(item);
+  // If an actor has multiple copies of the same spell (e.g. dragged in more than once),
+  // only show it once in this table.
+  if (cat === "spells") {
+    const src = item?.flags?.core?.sourceId || item?.flags?.dnd5e?.sourceId || item?.system?.sourceId || item?.system?.identifier || item?.system?.slug;
+    const lvl = item?.system?.level ?? "";
+    const sch = item?.system?.school ?? "";
+    const key = src || `${item?.name ?? ""}|${lvl}|${sch}`;
+    if (__aeSeen[bucket].has(key)) continue;
+    __aeSeen[bucket].add(key);
+  }
+
   // default is visible if missing key
-  if (__aeFilters?.[cat] === false) continue;
+  if (cat !== "spells") {
+    if (__aeFilters?.[cat] === false) continue;
+  } else {
+    const spellFilter = __aeFilters?.spells;
+    if (!shouldIncludeSpell(item, spellFilter)) continue;
+  }
 
   buckets[bucket].push(await makeRow(item));
+
+  // Spell-like activities embedded in non-spell items/features:
+  // These should respect the parent category filter (equipment/features/etc.) and remain visible even if the Spells filter is off.
+  const acts = getActivities(item).filter(isSpellLikeActivity);
+  if (cat !== "spells" && acts.length) {
+    for (const act of acts) {
+      const aBucket = getActivationBucketFromActivity(act) ?? bucket;
+      const aRow = await makeRow(item);
+      // Keep the underlying item id for interactions
+      aRow.id = item.id;
+      // Prefer activity label/icon
+      aRow.name = act.name ?? aRow.name;
+      aRow.img = act.icon ?? act.img ?? aRow.img;
+      // Show only this activity in the expanded section so buttons map correctly
+      aRow.activities = [{
+        id: act.id ?? act._id ?? "",
+        name: act.name ?? item.name,
+        icon: act.icon ?? act.img ?? "",
+        // Compute uses text inline so rendering never depends on external helper scope.
+        usesText: (() => {
+          const u = act?.uses;
+          if (!u) return "—";
+          const max = u.max ?? u.total ?? u.capacity;
+          const val = u.value ?? u.spent ?? u.remaining;
+          // If neither side is present, treat it as no-uses.
+          if (max === undefined && val === undefined) return "—";
+          const nMax = (max === null || max === "") ? undefined : Number(max);
+          const nVal = (val === null || val === "") ? undefined : Number(val);
+          if ((nMax ?? 0) === 0 && (nVal ?? 0) === 0) return "—";
+          if (nMax === undefined) return String(nVal ?? 0);
+          return `${nVal ?? 0}/${nMax}`;
+        })(),
+        // Time/activation shorthand (A/B/R etc.) computed inline so it cannot go out of scope.
+        timeShort: (() => {
+          const t = act?.time ?? act?.activation ?? act?.system?.activation;
+          const type = (t?.type ?? t?.value ?? "").toString().toLowerCase();
+          // Common D&D 5e shorthands.
+          if (["action", "a"].includes(type)) return "A";
+          if (["bonus", "bonusaction", "ba"].includes(type)) return "B";
+          if (["reaction", "r"].includes(type)) return "R";
+          if (["minute", "min"].includes(type)) return "dk";
+          if (["hour", "hr"].includes(type)) return "sa";
+          if (["day"].includes(type)) return "g";
+          // Fallback: show a short, safe string.
+          return type ? type.slice(0, 3).toUpperCase() : "–";
+        })(),
+	        // Damage HTML derived from the activity itself.
+	        damageHtml: buildDamageHtml(act),
+        hasRollAttack: typeof act.rollAttack === "function",
+        hasRollDamage: typeof act.rollDamage === "function",
+        hasUse: typeof act.use === "function"
+      }];
+      // Display roll/damage fields from the activity if present
+      aRow.uses = (typeof act.use === "function") ? aRow.uses : aRow.uses;
+      aRow.rollText = (typeof act.rollAttack === "function") ? game.i18n.localize("ACTION_SHEET.RollAttack") : aRow.rollText;
+	      aRow.dmgHtml = buildDamageHtml(act) || aRow.dmgHtml;
+	      aRow.dmgText = buildDamageHtml(act) ? "" : aRow.dmgText;
+
+      buckets[aBucket].push(aRow);
+    }
+  }
+
 }
 
       const sortByName = (a,b) => (a.name ?? "").localeCompare(b.name ?? "", game.i18n.lang);
@@ -702,66 +935,205 @@ game.settings.register("sidebar-traits", "aeFilters", {
     consumables: true,
     tools: true,
     other: true
+  },
+  onChange: () => rerenderOpenCharacterSheets(),
+});
+
+  let __patched = false;
+  try { __patched = patchCharacterSheet(); } catch (e) { console.error(e); }
+  if (!__patched) {
+    Hooks.once("ready", () => {
+      try { patchCharacterSheet(); } catch (e) { console.error(e); }
+    });
   }
 });
 
-  try { patchCharacterSheet(); } catch (e) { console.error(e); }
-});
+async function aeOpenFilterDialog() {
+  const cats = ["weapons","equipment","features","consumables","tools","other"];
+  const current = game.settings.get(MODULE_ID, "aeFilters") ?? {};
 
-async function aeOpenFilterDialog(sheet) {
-  const current = duplicate(game.settings.get(MODULE_ID, "aeFilters") ?? {});
-  const cats = [
-    ["weapons", "ACTION_SHEET.Filter.Categories.Weapons"],
-    ["spells", "ACTION_SHEET.Filter.Categories.Spells"],
-    ["equipment", "ACTION_SHEET.Filter.Categories.Equipment"],
-    ["features", "ACTION_SHEET.Filter.Categories.Features"],
-    ["consumables", "ACTION_SHEET.Filter.Categories.Consumables"],
-    ["tools", "ACTION_SHEET.Filter.Categories.Tools"],
-    ["other", "ACTION_SHEET.Filter.Categories.Other"]
-  ];
+  const currentSpells = (() => {
+    const s = current.spells;
+    if (typeof s === "boolean") return { all: s, prepared: false, ritual: false, cantrips: false };
+    return {
+      all: !!(s?.all),
+      // default: Prepared checked
+      prepared: (s?.prepared ?? true) === true,
+      ritual: !!(s?.ritual),
+      cantrips: !!(s?.cantrips),
+    };
+  })();
 
-  const rows = cats.map(([key, labelKey]) => {
-    const checked = current[key] !== false ? "checked" : "";
-    const label = game.i18n.localize(labelKey);
-    return `<label class="ae-filter-row"><input type="checkbox" name="${key}" ${checked}/> ${label}</label>`;
-  }).join("");
+  const spellsGroup = `
+    <li class="filter-group spells-group">
+      <div class="filter-group-title">${game.i18n.localize("ACTION_SHEET.Filter.Categories.Spells")}</div>
+      <label class="checkbox">
+        <input type="checkbox" name="spellsAll" ${currentSpells.all ? "checked" : ""}>
+        <span>${game.i18n.localize("ACTION_SHEET.Filter.Spells.All")}</span>
+      </label>
+      <div class="spells-suboptions">
+        <label class="checkbox">
+          <input type="checkbox" name="spellsPrepared" ${currentSpells.prepared ? "checked" : ""}>
+          <span>${game.i18n.localize("ACTION_SHEET.Filter.Spells.Prepared")}</span>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" name="spellsRitual" ${currentSpells.ritual ? "checked" : ""}>
+          <span>${game.i18n.localize("ACTION_SHEET.Filter.Spells.Ritual")}</span>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" name="spellsCantrips" ${currentSpells.cantrips ? "checked" : ""}>
+          <span>${game.i18n.localize("ACTION_SHEET.Filter.Spells.Cantrips")}</span>
+        </label>
+      </div>
+    </li>
+  `;
 
-  const content = `
-  <form class="ae-filter-form">
-    <p>${game.i18n.localize("ACTION_SHEET.Filter.Prompt")}</p>
-    <div class="ae-filter-grid">${rows}</div>
+  const content = `<form class="filter-dialog">
+    <p>${game.i18n.localize("ACTION_SHEET.FilterPrompt")}</p>
+    <ul class="filter-list">
+      ${spellsGroup}
+      ${cats.map((cat) => {
+        const key = cat;
+        const checked = current[key] !== false ? "checked" : "";
+        const label = game.i18n.localize(`ACTION_SHEET.Filter.Categories.${cat[0].toUpperCase()}${cat.slice(1)}`);
+        return `<li>
+          <label class="checkbox">
+            <input type="checkbox" name="${key}" ${checked}>
+            <span>${label}</span>
+          </label>
+        </li>`;
+      }).join("")}
+    </ul>
   </form>`;
 
-  return new Dialog({
-    title: game.i18n.localize("ACTION_SHEET.Filter.Title"),
+  const dlg = new Dialog({
+    title: game.i18n.localize("ACTION_SHEET.FilterTitle"),
     content,
     buttons: {
       save: {
-        label: game.i18n.localize("ACTION_SHEET.Filter.Save"),
+        icon: '<i class="fas fa-save"></i>',
+        label: game.i18n.localize("ACTION_SHEET.FilterSave"),
         callback: async (html) => {
-          const form = html[0].querySelector("form.ae-filter-form");
-          const data = new FormData(form);
+          const fd = new FormData(html[0].querySelector("form"));
+
           const next = {};
-          for (const [key] of cats) {
-            next[key] = data.get(key) === "on";
+          for (const cat of cats) next[cat] = fd.get(cat) === "on";
+
+          let spellsAll = fd.get("spellsAll") === "on";
+          let spellsPrepared = fd.get("spellsPrepared") === "on";
+          let spellsRitual = fd.get("spellsRitual") === "on";
+          let spellsCantrips = fd.get("spellsCantrips") === "on";
+
+          // Mutual exclusivity rules
+          // - "All Spells" disables (and clears) the other spell filters.
+          // - Prepared/Ritual disables "All Spells".
+          // - Cantrips is independent, except it is disabled when "All Spells" is selected.
+          if (spellsAll) {
+            spellsPrepared = false;
+            spellsRitual = false;
+            spellsCantrips = false;
+          } else if (spellsPrepared || spellsRitual) {
+            spellsAll = false;
           }
+
+          next.spells = { all: spellsAll, prepared: spellsPrepared, ritual: spellsRitual, cantrips: spellsCantrips };
+
           await game.settings.set(MODULE_ID, "aeFilters", next);
-          sheet.render(true);
-        }
+          rerenderOpenCharacterSheets();
+        },
       },
       reset: {
-        label: game.i18n.localize("ACTION_SHEET.Filter.Reset"),
+        icon: '<i class="fas fa-undo"></i>',
+        label: game.i18n.localize("ACTION_SHEET.FilterReset"),
         callback: async () => {
-          const next = { weapons:true, spells:true, equipment:true, features:true, consumables:true, tools:true, other:true };
+          const next = {};
+          for (const cat of cats) next[cat] = true;
+          next.spells = { all: false, prepared: true, ritual: false, cantrips: false };
           await game.settings.set(MODULE_ID, "aeFilters", next);
-          sheet.render(true);
-        }
-      }
+          rerenderOpenCharacterSheets();
+        },
+      },
+      close: {
+        icon: '<i class="fas fa-times"></i>',
+        label: game.i18n.localize("ACTION_SHEET.Close"),
+      },
     },
-    default: "save"
-  }).render(true);
+    default: "save",
+  }, { width: 420 });
+
+  dlg.render(true);
+
+  // UI syncing
+  const syncUI = () => {
+    const html = dlg.element;
+    const all = html.find('input[name="spellsAll"]');
+    const prep = html.find('input[name="spellsPrepared"]');
+    const rit = html.find('input[name="spellsRitual"]');
+    const can = html.find('input[name="spellsCantrips"]');
+
+    const allChecked = !!all.prop("checked");
+    const prepChecked = !!prep.prop("checked");
+    const ritChecked = !!rit.prop("checked");
+
+    // "All Spells" is mutually exclusive with the other spell filters.
+    if (allChecked) {
+      prep.prop("checked", false);
+      rit.prop("checked", false);
+      can.prop("checked", false);
+    }
+
+    // Disable rules:
+    // - If Prepared or Ritual is checked, All Spells becomes unavailable.
+    // - If All Spells is checked, the other spell checkboxes become unavailable.
+    all.prop("disabled", prepChecked || ritChecked);
+    prep.prop("disabled", allChecked);
+    rit.prop("disabled", allChecked);
+    can.prop("disabled", allChecked);
+  };
+
+  // Bind
+  const bind = () => {
+    const html = dlg.element;
+    html.find('input[name="spellsAll"], input[name="spellsPrepared"], input[name="spellsRitual"], input[name="spellsCantrips"]').on("change", syncUI);
+    syncUI();
+  };
+
+// Bind after the dialog is actually rendered in the DOM
+  Hooks.once("renderDialog", (app, html) => {
+    if (app !== dlg) return;
+
+    const all = html.find('input[name="spellsAll"]');
+    const prep = html.find('input[name="spellsPrepared"]');
+    const rit = html.find('input[name="spellsRitual"]');
+
+    const syncUI = () => {
+      if (all.prop("checked")) {
+        // Clear + lock sub-options
+        prep.prop("checked", false).prop("disabled", true);
+        rit.prop("checked", false).prop("disabled", true);
+      } else {
+        prep.prop("disabled", false);
+        rit.prop("disabled", false);
+      }
+
+      // If any sub-option is active, lock "All Spells"
+      if (prep.prop("checked") || rit.prop("checked")) {
+        all.prop("checked", false).prop("disabled", true);
+      } else {
+        all.prop("disabled", false);
+      }
+    };
+
+    // Events
+    all.on("change", syncUI);
+    prep.on("change", syncUI);
+    rit.on("change", syncUI);
+
+    // Initial state
+    syncUI();
+  });
+
+  return dlg;
 }
 
-Hooks.once("ready", () => {
-  patchCharacterSheet();
-});
+
