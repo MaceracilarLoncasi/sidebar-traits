@@ -138,220 +138,44 @@
 
         </div>
 
-        <div class="action-economy">
+        {{!-- Senses --}}
+        {{#if (or editable senses)}}
+        {{> "dnd5e.actor-trait-pills" values=senses key="senses" icon="fas fa-eye"
+            label="DND5E.Senses" configAction="senses" }}
+        {{/if}}
 
-<div class="ae-section">
-  <h3 class="ae-header ae-section-title">{{localize "ACTION_SHEET.Actions"}} <button type="button" class="ae-filter-btn" data-ae-action="open-filter" title="{{localize 'ACTION_SHEET.Filter.Button'}}"><i class="fas fa-filter"></i></button></h3>
-  <table>
-    <thead>
-      <tr>
-        <th>{{localize "ACTION_SHEET.Columns.Name"}}</th>
-        <th class="ae-col-uses">{{localize "ACTION_SHEET.Columns.Uses"}}</th>
-        <th class="ae-col-roll">{{localize "ACTION_SHEET.Columns.HitSave"}}</th>
-        <th class="ae-col-dmg">{{localize "ACTION_SHEET.Columns.Damage"}}</th>
-        <th class="ae-col-range">{{localize "ACTION_SHEET.Columns.Range"}}</th>
-        <th class="ae-col-target">{{localize "ACTION_SHEET.Columns.Target"}}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{#if actionEconomy.actionCount}}
-        {{#each actionEconomy.action as |row|}}
-        <tr class="ae-row" data-item-id="{{row.id}}">
-          <td>
-            <div class="ae-name">
-              <div class="img" style="background-image: url('{{row.img}}')"></div>
-              <a class="name" data-ae-action="toggle">{{row.name}}</a>
-              <a class="ae-toggle" data-ae-action="toggle" title="Aç/Kapat"><i class="fas fa-chevron-down"></i></a>
-            </div>
-          </td>
-          <td class="ae-col-uses">{{row.uses}}</td>
-          <td class="ae-col-roll">{{#if row.rollHtml}}{{{row.rollHtml}}}{{else}}{{row.rollText}}{{/if}}</td>
-          <td class="ae-col-dmg">{{{row.dmgHtml}}}</td>
-          <td class="ae-col-range">{{row.range}}</td>
-          <td class="ae-col-target">{{row.target}}</td>
-        </tr>
-        <tr class="ae-summary-row" data-item-id="{{row.id}}">
-          <td colspan="6">
-            <div class="ae-summary">
-              <div class="ae-description">{{{row.description}}}</div>
-              {{#if row.activities.length}}
-  <div class="ae-activities-table">
-    <div class="ae-activities-head">
-      <div class="title">{{localize "ACTION_SHEET.Activities"}}</div>
-      <div class="col uses">{{localize "ACTION_SHEET.Columns.Uses"}}</div>
-      <div class="col time">{{localize "ACTION_SHEET.Columns.Time"}}</div>
-      <div class="col dmg">{{localize "ACTION_SHEET.Columns.Damage"}}</div>
-      
-    </div>
-    {{#each row.activities as |act|}}
-      <div class="ae-activity-row">
-        <div class="name">
-          {{#if act.icon}}
-            <img class="icon" src="{{act.icon}}" />
-          {{else}}
-            <i class="fas fa-bolt"></i>
-          {{/if}}
-          <span class="label">{{act.name}}</span>
-        </div>
-        <div class="uses">{{act.usesText}}</div>
-        <div class="time">{{act.timeShort}}</div>
-        <div class="dmg">{{{act.damageHtml}}}</div>
-</div>
-    {{/each}}
-  </div>
-{{/if}}
-            </div>
-          </td>
-        </tr>
-        {{/each}}
-      {{else}}
-        <tr><td colspan="6"><em>—</em></td></tr>
-      {{/if}}
-    </tbody>
-  </table>
-</div>
+        {{!-- Resistances --}}
+        {{> "dnd5e.actor-trait-pills" values=traits.dr key="dr" color="green" icon="fas fa-shield-halved"
+            label="DND5E.Resistances" }}
 
-<div class="ae-section">
-  <h3 class="ae-section-title">{{localize "ACTION_SHEET.BonusActions"}}</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>{{localize "ACTION_SHEET.Columns.Name"}}</th>
-        <th class="ae-col-uses">{{localize "ACTION_SHEET.Columns.Uses"}}</th>
-        <th class="ae-col-roll">{{localize "ACTION_SHEET.Columns.HitSave"}}</th>
-        <th class="ae-col-dmg">{{localize "ACTION_SHEET.Columns.Damage"}}</th>
-        <th class="ae-col-range">{{localize "ACTION_SHEET.Columns.Range"}}</th>
-        <th class="ae-col-target">{{localize "ACTION_SHEET.Columns.Target"}}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{#if actionEconomy.bonusCount}}
-        {{#each actionEconomy.bonus as |row|}}
-        <tr class="ae-row" data-item-id="{{row.id}}">
-          <td>
-            <div class="ae-name">
-              <div class="img" style="background-image: url('{{row.img}}')"></div>
-              <a class="name" data-ae-action="toggle">{{row.name}}</a>
-              <a class="ae-toggle" data-ae-action="toggle" title="Aç/Kapat"><i class="fas fa-chevron-down"></i></a>
-            </div>
-          </td>
-          <td class="ae-col-uses">{{row.uses}}</td>
-          <td class="ae-col-roll">{{#if row.rollHtml}}{{{row.rollHtml}}}{{else}}{{row.rollText}}{{/if}}</td>
-          <td class="ae-col-dmg">{{{row.dmgHtml}}}</td>
-          <td class="ae-col-range">{{row.range}}</td>
-          <td class="ae-col-target">{{row.target}}</td>
-        </tr>
-        <tr class="ae-summary-row" data-item-id="{{row.id}}">
-          <td colspan="6">
-            <div class="ae-summary">
-              <div class="ae-description">{{{row.description}}}</div>
-              {{#if row.activities.length}}
-  <div class="ae-activities-table">
-    <div class="ae-activities-head">
-      <div class="title">{{localize "ACTION_SHEET.Activities"}}</div>
-      <div class="col uses">{{localize "ACTION_SHEET.Columns.Uses"}}</div>
-      <div class="col time">{{localize "ACTION_SHEET.Columns.Time"}}</div>
-      <div class="col dmg">{{localize "ACTION_SHEET.Columns.Damage"}}</div>
-    </div>
-    {{#each row.activities as |act|}}
-      <div class="ae-activity-row">
-        <div class="name">
-          {{#if act.icon}}
-            <img class="icon" src="{{act.icon}}" />
-          {{else}}
-            <i class="fas fa-bolt"></i>
-          {{/if}}
-          <span class="label">{{act.name}}</span>
-        </div>
-        <div class="uses">{{act.usesText}}</div>
-        <div class="time">{{act.timeShort}}</div>
-        <div class="dmg">{{{act.damageHtml}}}</div>
-      </div>
-    {{/each}}
-  </div>
-{{/if}}
-            </div>
-          </td>
-        </tr>
-        {{/each}}
-      {{else}}
-        <tr><td colspan="6"><em>—</em></td></tr>
-      {{/if}}
-    </tbody>
-  </table>
-</div>
+        {{!-- Immunities --}}
+        {{#if editable}}
+            {{> "dnd5e.actor-trait-pills" values=traits.di key="di" color="green" icon="fas fa-shield"
+                label="DND5E.DamImm" }}
+        {{else}}
+            {{> "dnd5e.actor-trait-pills" values=traits.di key="di" color="green" icon="fas fa-shield"
+                label="DND5E.Immunities" }}
+        {{/if}}
+        {{> "dnd5e.actor-trait-pills" values=traits.ci key="ci" color="green" svg="rosa-shield" label="DND5E.ConImm" }}
 
-<div class="ae-section">
-  <h3 class="ae-section-title">{{localize "ACTION_SHEET.Reactions"}}</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>{{localize "ACTION_SHEET.Columns.Name"}}</th>
-        <th class="ae-col-uses">{{localize "ACTION_SHEET.Columns.Uses"}}</th>
-        <th class="ae-col-roll">{{localize "ACTION_SHEET.Columns.HitSave"}}</th>
-        <th class="ae-col-dmg">{{localize "ACTION_SHEET.Columns.Damage"}}</th>
-        <th class="ae-col-range">{{localize "ACTION_SHEET.Columns.Range"}}</th>
-        <th class="ae-col-target">{{localize "ACTION_SHEET.Columns.Target"}}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{#if actionEconomy.reactionCount}}
-        {{#each actionEconomy.reaction as |row|}}
-        <tr class="ae-row" data-item-id="{{row.id}}">
-          <td>
-            <div class="ae-name">
-              <div class="img" style="background-image: url('{{row.img}}')"></div>
-              <a class="name" data-ae-action="toggle">{{row.name}}</a>
-              <a class="ae-toggle" data-ae-action="toggle" title="Aç/Kapat"><i class="fas fa-chevron-down"></i></a>
-            </div>
-          </td>
-          <td class="ae-col-uses">{{row.uses}}</td>
-          <td class="ae-col-roll">{{#if row.rollHtml}}{{{row.rollHtml}}}{{else}}{{row.rollText}}{{/if}}</td>
-          <td class="ae-col-dmg">{{{row.dmgHtml}}}</td>
-          <td class="ae-col-range">{{row.range}}</td>
-          <td class="ae-col-target">{{row.target}}</td>
-        </tr>
-        <tr class="ae-summary-row" data-item-id="{{row.id}}">
-          <td colspan="6">
-            <div class="ae-summary">
-              <div class="ae-description">{{{row.description}}}</div>
-              {{#if row.activities.length}}
-  <div class="ae-activities-table">
-    <div class="ae-activities-head">
-      <div class="title">{{localize "ACTION_SHEET.Activities"}}</div>
-      <div class="col uses">{{localize "ACTION_SHEET.Columns.Uses"}}</div>
-      <div class="col time">{{localize "ACTION_SHEET.Columns.Time"}}</div>
-      <div class="col dmg">{{localize "ACTION_SHEET.Columns.Damage"}}</div>
-    </div>
-    {{#each row.activities as |act|}}
-      <div class="ae-activity-row">
-        <div class="name">
-          {{#if act.icon}}
-            <img class="icon" src="{{act.icon}}" />
-          {{else}}
-            <i class="fas fa-bolt"></i>
-          {{/if}}
-          <span class="label">{{act.name}}</span>
-        </div>
-        <div class="uses">{{act.usesText}}</div>
-        <div class="time">{{act.timeShort}}</div>
-        <div class="dmg">{{{act.damageHtml}}}</div>
-      </div>
-    {{/each}}
-  </div>
-{{/if}}
-            </div>
-          </td>
-        </tr>
-        {{/each}}
-      {{else}}
-        <tr><td colspan="6"><em>—</em></td></tr>
-      {{/if}}
-    </tbody>
-  </table>
-</div>
+        {{!-- Vulnerabilities --}}
+        {{> "dnd5e.actor-trait-pills" values=traits.dv key="dv" color="maroon" icon="fas fa-heart-crack"
+            label="DND5E.Vulnerabilities" }}
 
-</div>
+        {{!-- Damage Modification --}}
+        {{> "dnd5e.actor-trait-pills" values=traits.dm key="dm" icon="fas fa-heart-circle-plus"
+            label="DND5E.DamageModification.Label" }}
+
+        {{!-- Armor --}}
+        {{> "dnd5e.actor-trait-pills" values=traits.armor key="armor" svg="checked-shield" label="DND5E.Armor" }}
+
+        {{!-- Weapons --}}
+        {{> "dnd5e.actor-trait-pills" values=traits.weapon key="weapon" svg="trait-weapon-proficiencies"
+            label="TYPES.Item.weaponPl" }}
+
+        {{!-- Languages --}}
+        {{> "dnd5e.actor-trait-pills" values=traits.languages key="languages" icon="fas fa-flag"
+            label="DND5E.Languages" }}
 
     </div>
 </section>
@@ -359,7 +183,7 @@
 {{#*inline ".skill-prof"}}
 <li data-key="{{ key }}" {{~#if reference}} data-reference-tooltip="{{ reference }}"{{/if}}>
     <proficiency-cycle type="skill" name="{{ path }}.value" data-tooltip="{{ hover }}"
-                       value="{{#if @root.editable}}{{ source.value }}{{else}}{{ value }}{{/if}}"
+                       value="{{#if @root.editable}}{{ source.value }}{{else}}{{ prof.multiplier }}{{/if}}"
                        aria-label="{{ localize hover }}" {{disabled (not @root.editable)}}></proficiency-cycle>
     {{#if @root.editable}}
     <select name="{{ path }}.ability" class="ability roboto-upper unselect">
