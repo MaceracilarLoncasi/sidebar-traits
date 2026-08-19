@@ -2,6 +2,12 @@ const MODULE_ID = "sidebar-traits";
 const ACTION_TAB_ID = "actionEconomy";
 const ACTION_TAB_TEMPLATE = `modules/${MODULE_ID}/templates/actors/tabs/character-actions.hbs`;
 
+let integrationPrepared = false;
+let integrationInstalled = false;
+let actionContextBuilder = null;
+let actionListenerAttacher = null;
+let sheetState = null;
+
 function insertPartAfter(parts, afterId, partId, partConfig) {
   const entries = [];
   let inserted = false;
@@ -18,12 +24,67 @@ function insertPartAfter(parts, afterId, partId, partConfig) {
   return Object.fromEntries(entries);
 }
 
-function patchCharacterActionsTab() {
+function interceptNextAssignment(target, property, onAssign) {
+  const descriptor = Object.getOwnPropertyDescriptor(target, property);
+  if (descriptor && !descriptor.configurable) return false;
+
+  const originalValue = target[property];
+  const enumerable = descriptor?.enumerable ?? true;
+
+  Object.defineProperty(target, property, {
+    configurable: true,
+    enumerable,
+    get() {
+      return originalValue;
+    },
+    set(value) {
+      Object.defineProperty(target, property, {
+        configurable: true,
+        enumerable,
+        writable: true,
+        value: originalValue
+      });
+      onAssign(value);
+    }
+  });
+
+  return true;
+}
+
+function installCapturedIntegration() {
+  if (integrationInstalled || !sheetState || !actionContextBuilder || !actionListenerAttacher) return;
+
+  const { proto, preparePartContext, attachPartListeners } = sheetState;
+
+  proto._preparePartContext = async function(partId, context, options) {
+    context = await preparePartContext.call(this, partId, context, options);
+    if (partId !== ACTION_TAB_ID) return context;
+    return actionContextBuilder.call(this, context, options);
+  };
+
+  proto._attachPartListeners = function(partId, html, options) {
+    if (partId === ACTION_TAB_ID) {
+      // The captured module listener expects the old Details part id.
+      return actionListenerAttacher.call(this, "details", html, options);
+    }
+    return attachPartListeners.call(this, partId, html, options);
+  };
+
+  integrationInstalled = true;
+}
+
+function prepareCharacterSheetIntegration() {
+  if (integrationPrepared) return true;
+
   const sheetCls = globalThis.dnd5e?.applications?.actor?.CharacterActorSheet;
-  if (!sheetCls) {
-    console.warn("[sidebar-traits] dnd5e CharacterActorSheet not found yet");
-    return false;
-  }
+  if (!sheetCls) return false;
+
+  const proto = sheetCls.prototype;
+  sheetState = {
+    proto,
+    preparePartContext: proto._preparePartContext,
+    attachPartListeners: proto._attachPartListeners
+  };
 
   if (!sheetCls.PARTS[ACTION_TAB_ID]) {
     sheetCls.PARTS = insertPartAfter(sheetCls.PARTS, "details", ACTION_TAB_ID, {
@@ -44,49 +105,44 @@ function patchCharacterActionsTab() {
     });
   }
 
-  const proto = sheetCls.prototype;
-  if (!proto.__actionEconomyTabPatched) {
-    const originalOnRender = proto._onRender;
+  const detailsPart = sheetCls.PARTS.details;
+  const templateIntercepted = interceptNextAssignment(detailsPart, "template", () => {
+    // sidebar-traits.js historically replaced the Details template. Ignore that assignment
+    // so the system's regular Details tab remains completely unchanged.
+  });
 
-    proto._onRender = async function(context, options) {
-      if (typeof originalOnRender === "function") {
-        await originalOnRender.call(this, context, options);
-      }
+  const contextIntercepted = interceptNextAssignment(proto, "_prepareDetailsContext", (patchedMethod) => {
+    actionContextBuilder = patchedMethod;
+    installCapturedIntegration();
+  });
 
-      const host = this.element?.querySelector(
-        `[data-application-part="${ACTION_TAB_ID}"] .action-economy-host`
-      );
-      const freshlyRenderedTable = this.element?.querySelector(
-        '[data-application-part="details"] .action-economy'
-      );
-      const table = freshlyRenderedTable ?? this.__actionEconomyTable;
+  const listenersIntercepted = interceptNextAssignment(proto, "_attachPartListeners", (patchedMethod) => {
+    actionListenerAttacher = patchedMethod;
+    installCapturedIntegration();
+  });
 
-      if (!host || !table) return;
-      if (table.parentElement !== host) host.replaceChildren(table);
-      this.__actionEconomyTable = table;
-    };
-
-    proto.__actionEconomyTabPatched = true;
+  if (!templateIntercepted || !contextIntercepted || !listenersIntercepted) {
+    console.error("[sidebar-traits] could not isolate the Actions tab from the regular Details tab");
+    return false;
   }
 
   foundry.applications.handlebars.loadTemplates([ACTION_TAB_TEMPLATE]);
+  integrationPrepared = true;
   return true;
 }
 
 Hooks.once("init", () => {
-  let patched = false;
-  try {
-    patched = patchCharacterActionsTab();
-  } catch (error) {
-    console.error("[sidebar-traits] failed to add the Actions tab", error);
-  }
+  prepareCharacterSheetIntegration();
+});
 
-  if (patched) return;
-  Hooks.once("ready", () => {
-    try {
-      patchCharacterActionsTab();
-    } catch (error) {
-      console.error("[sidebar-traits] failed to add the Actions tab", error);
+Hooks.once("ready", () => {
+  // When the dnd5e sheet class was unavailable during init, this callback is
+  // registered before sidebar-traits.js registers its own ready fallback.
+  if (!integrationPrepared) prepareCharacterSheetIntegration();
+
+  setTimeout(() => {
+    if (!integrationInstalled) {
+      console.error("[sidebar-traits] Actions tab integration was not installed");
     }
-  });
+  }, 0);
 });
