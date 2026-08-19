@@ -1,4 +1,108 @@
 <section class="tab {{ tab.cssClass }} action-economy-tab flexcol"
          data-tab="{{ tab.id }}" data-group="{{ tab.group }}">
-  <div class="action-economy-host"></div>
+  <div class="action-economy">
+    {{> ".action-section"
+        label="ACTION_SHEET.Actions"
+        rows=actionEconomy.action
+        count=actionEconomy.actionCount
+        showFilter=true
+    }}
+    {{> ".action-section"
+        label="ACTION_SHEET.BonusActions"
+        rows=actionEconomy.bonus
+        count=actionEconomy.bonusCount
+    }}
+    {{> ".action-section"
+        label="ACTION_SHEET.Reactions"
+        rows=actionEconomy.reaction
+        count=actionEconomy.reactionCount
+    }}
+  </div>
 </section>
+
+{{#*inline ".action-section"}}
+<div class="ae-section">
+  <h3 class="{{#if showFilter}}ae-header {{/if}}ae-section-title">
+    {{localize label}}
+    {{#if showFilter}}
+    <button type="button" class="ae-filter-btn" data-ae-action="open-filter"
+            title="{{localize 'ACTION_SHEET.Filter.Button'}}">
+      <i class="fas fa-filter"></i>
+    </button>
+    {{/if}}
+  </h3>
+
+  <table>
+    <thead>
+      <tr>
+        <th>{{localize "ACTION_SHEET.Columns.Name"}}</th>
+        <th class="ae-col-uses">{{localize "ACTION_SHEET.Columns.Uses"}}</th>
+        <th class="ae-col-roll">{{localize "ACTION_SHEET.Columns.HitSave"}}</th>
+        <th class="ae-col-dmg">{{localize "ACTION_SHEET.Columns.Damage"}}</th>
+        <th class="ae-col-range">{{localize "ACTION_SHEET.Columns.Range"}}</th>
+        <th class="ae-col-target">{{localize "ACTION_SHEET.Columns.Target"}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#if count}}
+        {{#each rows as |row|}}
+        <tr class="ae-row" data-item-id="{{row.id}}">
+          <td>
+            <div class="ae-name">
+              <div class="img" style="background-image: url('{{row.img}}')"></div>
+              <a class="name" data-ae-action="toggle">{{row.name}}</a>
+              <a class="ae-toggle" data-ae-action="toggle" title="Aç/Kapat">
+                <i class="fas fa-chevron-down"></i>
+              </a>
+            </div>
+          </td>
+          <td class="ae-col-uses">{{row.uses}}</td>
+          <td class="ae-col-roll">
+            {{#if row.rollHtml}}{{{row.rollHtml}}}{{else}}{{row.rollText}}{{/if}}
+          </td>
+          <td class="ae-col-dmg">{{{row.dmgHtml}}}</td>
+          <td class="ae-col-range">{{row.range}}</td>
+          <td class="ae-col-target">{{row.target}}</td>
+        </tr>
+        <tr class="ae-summary-row" data-item-id="{{row.id}}">
+          <td colspan="6">
+            <div class="ae-summary">
+              <div class="ae-description">{{{row.description}}}</div>
+              {{#if row.activities.length}}
+              <div class="ae-activities-table">
+                <div class="ae-activities-head">
+                  <div class="title">{{localize "ACTION_SHEET.Activities"}}</div>
+                  <div class="col uses">{{localize "ACTION_SHEET.Columns.Uses"}}</div>
+                  <div class="col time">{{localize "ACTION_SHEET.Columns.Time"}}</div>
+                  <div class="col dmg">{{localize "ACTION_SHEET.Columns.Damage"}}</div>
+                </div>
+                {{#each row.activities as |act|}}
+                <div class="ae-activity-row">
+                  <div class="name">
+                    {{#if act.icon}}
+                    <img class="icon" src="{{act.icon}}" alt="">
+                    {{else}}
+                    <i class="fas fa-bolt"></i>
+                    {{/if}}
+                    <span class="label">{{act.name}}</span>
+                  </div>
+                  <div class="uses">{{act.usesText}}</div>
+                  <div class="time">{{act.timeShort}}</div>
+                  <div class="dmg">{{{act.damageHtml}}}</div>
+                </div>
+                {{/each}}
+              </div>
+              {{/if}}
+            </div>
+          </td>
+        </tr>
+        {{/each}}
+      {{else}}
+        <tr>
+          <td colspan="6"><em>—</em></td>
+        </tr>
+      {{/if}}
+    </tbody>
+  </table>
+</div>
+{{/inline}}
