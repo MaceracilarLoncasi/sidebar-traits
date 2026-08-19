@@ -57,9 +57,7 @@
             </div>
           </td>
           <td class="ae-col-uses">{{row.uses}}</td>
-          <td class="ae-col-roll">
-            {{#if row.rollHtml}}{{{row.rollHtml}}}{{else}}{{row.rollText}}{{/if}}
-          </td>
+          <td class="ae-col-roll">{{row.rollText}}</td>
           <td class="ae-col-dmg">{{{row.dmgHtml}}}</td>
           <td class="ae-col-range">{{row.range}}</td>
           <td class="ae-col-target">{{row.target}}</td>
@@ -76,19 +74,19 @@
                   <div class="col time">{{localize "ACTION_SHEET.Columns.Time"}}</div>
                   <div class="col dmg">{{localize "ACTION_SHEET.Columns.Damage"}}</div>
                 </div>
-                {{#each row.activities as |act|}}
+                {{#each row.activities as |activity|}}
                 <div class="ae-activity-row">
                   <div class="name">
-                    {{#if act.icon}}
-                    <img class="icon" src="{{act.icon}}" alt="">
+                    {{#if activity.icon}}
+                    <img class="icon" src="{{activity.icon}}" alt="">
                     {{else}}
                     <i class="fas fa-bolt"></i>
                     {{/if}}
-                    <span class="label">{{act.name}}</span>
+                    <span class="label">{{activity.name}}</span>
                   </div>
-                  <div class="uses">{{act.usesText}}</div>
-                  <div class="time">{{act.timeShort}}</div>
-                  <div class="dmg">{{{act.damageHtml}}}</div>
+                  <div class="uses">{{activity.usesText}}</div>
+                  <div class="time">{{activity.timeShort}}</div>
+                  <div class="dmg">{{{activity.damageHtml}}}</div>
                 </div>
                 {{/each}}
               </div>
