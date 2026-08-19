@@ -18,8 +18,8 @@
     "verified": "14"
   },
   "esmodules": [
-    "sidebar-traits.js",
-    "action-tab.js"
+    "action-tab.js",
+    "sidebar-traits.js"
   ],
   "styles": [
     "styles/sidebar-traits.css"
@@ -37,21 +37,21 @@
   "download": "https://github.com/MaceracilarLoncasi/sidebar-traits/releases/download/v0.2.2/sidebar-traits.zip",
   "readme": "https://github.com/MaceracilarLoncasi/sidebar-traits/blob/main/README.md",
   "license": "https://github.com/MaceracilarLoncasi/sidebar-traits/blob/main/LICENSE",
-"languages": [
-  {
-    "lang": "en",
-    "name": "English",
-    "path": "lang/en.json"
-  },
-  {
-    "lang": "tr",
-    "name": "Türkçe",
-    "path": "lang/tr.json"
-  },
-  {
-    "lang": "ru",
-    "name": "Русский",
-    "path": "lang/ru.json"
-  }
-]
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "tr",
+      "name": "Türkçe",
+      "path": "lang/tr.json"
+    },
+    {
+      "lang": "ru",
+      "name": "Русский",
+      "path": "lang/ru.json"
+    }
+  ]
 }
