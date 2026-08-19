@@ -1,7 +1,7 @@
 {
   "id": "sidebar-traits",
   "title": "D&D 5e Action Sheet",
-  "description": "See your Actions in the Details panel.",
+  "description": "See your Actions in a dedicated character sheet tab.",
   "version": "0.2.2",
   "authors": [
     {
@@ -36,21 +36,21 @@
   "download": "https://github.com/MaceracilarLoncasi/sidebar-traits/releases/download/v0.2.2/sidebar-traits.zip",
   "readme": "https://github.com/MaceracilarLoncasi/sidebar-traits/blob/main/README.md",
   "license": "https://github.com/MaceracilarLoncasi/sidebar-traits/blob/main/LICENSE",
-"languages": [
-  {
-    "lang": "en",
-    "name": "English",
-    "path": "lang/en.json"
-  },
-  {
-    "lang": "tr",
-    "name": "Türkçe",
-    "path": "lang/tr.json"
-  },
-  {
-    "lang": "ru",
-    "name": "Русский",
-    "path": "lang/ru.json"
-  }
-]
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "tr",
+      "name": "Türkçe",
+      "path": "lang/tr.json"
+    },
+    {
+      "lang": "ru",
+      "name": "Русский",
+      "path": "lang/ru.json"
+    }
+  ]
 }
