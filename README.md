@@ -3,7 +3,7 @@
 This release finalizes **D&D 5e Action Sheet** module with a stable feature set, improved filtering, and expanded localization support.
 
 **Action Sheet Overview**
-View all Actions, Bonus Actions, and Reactions directly in the Details panel.
+View all Actions, Bonus Actions, and Reactions in a dedicated Actions tab on the character sheet.
 
 **Advanced Filtering System**
 Filter by Weapons, Spells, Equipment, Features, Consumables, Tools, and Others

@@ -1,7 +1,7 @@
 {
   "id": "sidebar-traits",
   "title": "D&D 5e Action Sheet",
-  "description": "See your Actions in the Details panel.",
+  "description": "See your Actions in a dedicated character sheet tab.",
   "version": "0.2.2",
   "authors": [
     {
@@ -18,7 +18,8 @@
     "verified": "14"
   },
   "esmodules": [
-    "sidebar-traits.js"
+    "sidebar-traits.js",
+    "action-tab.js"
   ],
   "styles": [
     "styles/sidebar-traits.css"
