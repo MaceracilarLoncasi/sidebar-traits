@@ -18,7 +18,6 @@
     "verified": "14"
   },
   "esmodules": [
-    "action-tab.js",
     "sidebar-traits.js"
   ],
   "styles": [
